@@ -4,7 +4,7 @@ Automatically displays Uchisen visual mnemonics on JPDB kanji pages and reviews.
 
 ## Quick Install
 
-[📥 **Click here to install**](https://raw.githubusercontent.com/YOUR_USERNAME/jpdb-uchisen-userscript/main/jpdb-uchisen-userscript.js)
+[📥 **Click here to install**](https://raw.githubusercontent.com/HRussellZFAC023/UchiDb/refs/heads/main/jpdb-uchisen-userscript.js)
 
 *Requires [Tampermonkey](https://www.tampermonkey.net/)*
 
