@@ -7,6 +7,7 @@
 // @match        https://jpdb.io/review*
 // @connect      uchisen.com
 // @connect      ik.imagekit.io
+// @connect      dhblqbsgkimuk.cloudfront.net
 // @grant        GM_xmlhttpRequest
 // @license      MIT
 // ==/UserScript==
