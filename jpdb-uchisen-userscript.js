@@ -2,7 +2,7 @@
 // @name         JPDB Uchisen Image Inserter
 // @version      1.0
 // @description  Inserts Uchisen mnemonic images into JPDB kanji cards
-// @author       User
+// @author       togeffet, Henry Russell
 // @match        https://jpdb.io/kanji/*
 // @match        https://jpdb.io/review*
 // @connect      uchisen.com
@@ -25,7 +25,7 @@
             return decodeURIComponent(kanjiMatch[1]);
         }
         
-        // For review pages - look for hidden input with kanji
+        // For review pages
         const hiddenInput = document.querySelector('input[name="c"]');
         if (hiddenInput) {
             const parts = hiddenInput.value.split(',');
