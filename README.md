@@ -6,6 +6,8 @@ Automatically displays Uchisen visual mnemonics on JPDB kanji pages and reviews.
 
 [📥 **Click here to install**](https://raw.githubusercontent.com/HRussellZFAC023/UchiDb/refs/heads/main/jpdb-uchisen-userscript.js)
 
+If not detected, open tampermonkey, go to utilites and then import from url
+
 *Requires [Tampermonkey](https://www.tampermonkey.net/)*
 
 ---
