@@ -155,30 +155,42 @@
             return;
         }
 
-        // Find a good insertion point - look for the components section to insert after it
+        // Find a good insertion point - look for the main content area to insert after it
         let insertionPoint = null;
         
-        // Look for the "Mnemonic components" section
-        const componentLabels = document.querySelectorAll('h6.subsection-label');
-        for (const label of componentLabels) {
-            if (label.textContent.includes('Mnemonic components')) {
-                // Find the parent container of this entire section
-                insertionPoint = label.closest('.subsection-composed-of-kanji');
-                break;
+        // For kanji pages, try to insert after the mnemonic section but before "Used in" sections
+        const mnemonicSection = document.querySelector('h6.subsection-label + .subsection .mnemonic');
+        if (mnemonicSection) {
+            // Find the parent container of the mnemonic section
+            let mnemonicContainer = mnemonicSection.closest('.vbox > div, .result > div');
+            if (mnemonicContainer) {
+                insertionPoint = mnemonicContainer;
             }
         }
         
-        // If no components section found, try to find any subsection container
+        // Fallback: look for the result kanji container (the main container for kanji pages)
         if (!insertionPoint) {
-            const subsections = document.querySelectorAll('.subsection-composed-of-kanji, .hbox.wrap');
-            if (subsections.length > 0) {
-                insertionPoint = subsections[0];
+            const resultKanji = document.querySelector('.result.kanji');
+            if (resultKanji) {
+                insertionPoint = resultKanji;
             }
         }
         
-        // Fallback to main content area
+        // Fallback: look for the main vbox gap container that holds the kanji display and components
         if (!insertionPoint) {
-            insertionPoint = document.querySelector('.container') || document.querySelector('.result') || document.body;
+            const vboxContainers = document.querySelectorAll('.vbox.gap');
+            for (const vbox of vboxContainers) {
+                // Check if this vbox contains the kanji SVG or mnemonic components
+                if (vbox.querySelector('svg.kanji') || vbox.querySelector('.subsection-composed-of-kanji')) {
+                    insertionPoint = vbox.parentNode; // Get the parent container instead
+                    break;
+                }
+            }
+        }
+        
+        // Final fallback to main content area
+        if (!insertionPoint) {
+            insertionPoint = document.querySelector('.container') || document.querySelector('.review-reveal') || document.body;
         }
         
         if (!insertionPoint) {
@@ -345,15 +357,15 @@
 
         container.appendChild(contentDiv);
 
-        // Insert the container after the components section
-        if (insertionPoint.classList.contains('subsection-composed-of-kanji')) {
-            // Insert after the components section
+        // Insert the container after the main kanji content area
+        if (insertionPoint.classList && insertionPoint.classList.contains('result') && insertionPoint.classList.contains('kanji')) {
+            // Insert after the entire result kanji container (for review pages)
             insertionPoint.parentNode.insertBefore(container, insertionPoint.nextSibling);
-        } else if (insertionPoint.classList.contains('hbox')) {
-            // Insert after the hbox wrapper
+        } else if (mnemonicSection && insertionPoint) {
+            // For kanji pages, insert after the mnemonic section
             insertionPoint.parentNode.insertBefore(container, insertionPoint.nextSibling);
         } else {
-            // Fallback insertion
+            // Fallback insertion - append to the container
             insertionPoint.appendChild(container);
         }
     }
