@@ -21,9 +21,11 @@
         const url = window.location.href;
         
         // For kanji pages like https://jpdb.io/kanji/犬
-        const kanjiMatch = url.match(/https:\/\/jpdb\.io\/kanji\/(.+?)(?:#|$)/);
+        const kanjiMatch = url.match(/https:\/\/jpdb\.io\/kanji\/(.+?)(?:[?#]|$)/);
         if (kanjiMatch) {
-            return decodeURIComponent(kanjiMatch[1]);
+            // Remove any URL parameters and decode
+            const kanjiPart = kanjiMatch[1].split('?')[0].split('#')[0];
+            return decodeURIComponent(kanjiPart);
         }
         
         // For review pages
