@@ -78,34 +78,42 @@
     }
 
     function insertImageIntoJPDB(imageUrl, story, kanji) {
-        // Find the mnemonic div in JPDB
-        const mnemonicDivs = document.querySelectorAll('.subsection');
-        let mnemonicDiv = null;
+        // Check if we already inserted an image to avoid duplicates
+        if (document.getElementById('uchisen-mnemonic-container')) {
+            return;
+        }
+
+        // Find the mnemonic div in JPDB - look for the components section to insert after it
+        let insertionPoint = null;
         
-        // Look for the div that contains mnemonic content or is next to "Mnemonic" label
-        const mnemonicLabels = document.querySelectorAll('h6.subsection-label');
-        for (const label of mnemonicLabels) {
-            if (label.textContent.includes('Mnemonic')) {
-                mnemonicDiv = label.nextElementSibling;
+        // Look for the "Mnemonic components" section
+        const componentLabels = document.querySelectorAll('h6.subsection-label');
+        for (const label of componentLabels) {
+            if (label.textContent.includes('Mnemonic components')) {
+                // Find the parent container of this entire section
+                insertionPoint = label.closest('.subsection-composed-of-kanji');
                 break;
             }
         }
         
-        // If no specific mnemonic div found, try to find a good insertion point
-        if (!mnemonicDiv) {
-            const keywordDiv = document.querySelector('.subsection');
-            if (keywordDiv) {
-                mnemonicDiv = keywordDiv.parentNode;
+        // If no components section found, try to find any subsection container
+        if (!insertionPoint) {
+            const subsections = document.querySelectorAll('.subsection-composed-of-kanji, .hbox.wrap');
+            if (subsections.length > 0) {
+                insertionPoint = subsections[0];
             }
         }
         
-        if (!mnemonicDiv) {
-            console.log('Could not find suitable insertion point for mnemonic');
-            return;
+        // Fallback to looking for any subsection
+        if (!insertionPoint) {
+            const keywordDiv = document.querySelector('.subsection');
+            if (keywordDiv) {
+                insertionPoint = keywordDiv.parentNode;
+            }
         }
         
-        // Check if we already inserted an image to avoid duplicates
-        if (document.getElementById('uchisen-mnemonic-container')) {
+        if (!insertionPoint) {
+            console.log('Could not find suitable insertion point for mnemonic');
             return;
         }
         
@@ -171,17 +179,25 @@
         container.appendChild(storyDiv);
         container.appendChild(link);
         
-        // Insert the container
-        if (mnemonicDiv.tagName === 'DIV' && mnemonicDiv.classList.contains('subsection')) {
-            // Insert after the subsection
-            mnemonicDiv.parentNode.insertBefore(container, mnemonicDiv.nextSibling);
+        // Insert the container after the components section
+        if (insertionPoint.classList.contains('subsection-composed-of-kanji')) {
+            // Insert after the components section
+            insertionPoint.parentNode.insertBefore(container, insertionPoint.nextSibling);
+        } else if (insertionPoint.classList.contains('hbox')) {
+            // Insert after the hbox wrapper
+            insertionPoint.parentNode.insertBefore(container, insertionPoint.nextSibling);
         } else {
-            // Insert as child
-            mnemonicDiv.appendChild(container);
+            // Fallback insertion
+            insertionPoint.appendChild(container);
         }
     }
 
     function init() {
+        // Don't fetch on the front of review cards - only after "Show Answer"
+        if (window.location.href.includes('/review') && !document.querySelector('.review-reveal')) {
+            return;
+        }
+
         const kanji = extractKanjiFromURL();
         if (kanji) {
             currentKanji = kanji;
