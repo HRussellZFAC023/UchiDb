@@ -66,6 +66,8 @@
         const imageLoader = doc.querySelector('.kanji_image_loader[data-large]');
         if (!imageLoader) {
             console.log(`No image found for kanji: ${kanji}`);
+            const story = doc.querySelector('#mnemonic_story')?.textContent || 'No story available';
+            insertImageIntoJPDB(null, story, kanji);
             return;
         }
         
@@ -76,38 +78,56 @@
     }
 
     function insertImageIntoJPDB(imageUrl, story, kanji) {
-        // Find the mnemonic div in JPDB
-        const mnemonicDivs = document.querySelectorAll('.subsection');
-        let mnemonicDiv = null;
-        
-        // Look for the div that contains mnemonic content or is next to "Mnemonic" label
-        const mnemonicLabels = document.querySelectorAll('h6.subsection-label');
-        for (const label of mnemonicLabels) {
-            if (label.textContent.includes('Mnemonic')) {
-                mnemonicDiv = label.nextElementSibling;
-                break;
-            }
-        }
-        
-        // If no specific mnemonic div found, try to find a good insertion point
-        if (!mnemonicDiv) {
-            const keywordDiv = document.querySelector('.subsection');
-            if (keywordDiv) {
-                mnemonicDiv = keywordDiv.parentNode;
-            }
-        }
-        
-        if (!mnemonicDiv) {
-            console.log('Could not find suitable insertion point for mnemonic');
-            return;
-        }
-        
-        // Check if we already inserted an image to avoid duplicates
         if (document.getElementById('uchisen-mnemonic-container')) {
             return;
         }
+
+        let mnemonicLabel = null;
+        let mnemonicSubsection = null;
+        let insertionPoint = null;
         
-        // Create the container for our mnemonic content
+        const mnemonicLabels = document.querySelectorAll('h6.subsection-label');
+        for (const label of mnemonicLabels) {
+            if (label.textContent.includes('Mnemonic')) {
+                mnemonicLabel = label;
+                if (label.nextElementSibling && label.nextElementSibling.classList.contains('subsection')) {
+                    mnemonicSubsection = label.nextElementSibling;
+                    insertionPoint = mnemonicSubsection;
+                }
+                break;
+            }
+        }
+
+        if (!insertionPoint) {
+            const allSubsections = document.querySelectorAll('.subsection');
+            if (allSubsections.length > 0) {
+                // Use the last subsection as insertion point
+                insertionPoint = allSubsections[allSubsections.length - 1];
+                console.log('Using fallback insertion point after last subsection');
+            }
+        }
+
+        if (!insertionPoint) {
+            const kanjiResult = document.querySelector('.result.kanji');
+            if (kanjiResult) {
+                const vboxGap = kanjiResult.querySelector('.vbox.gap');
+                if (vboxGap) {
+                    insertionPoint = vboxGap.lastElementChild;
+                    console.log('Using kanji container as insertion point');
+                }
+            }
+        }
+
+        if (!insertionPoint) {
+            console.log('Could not find suitable insertion point for mnemonic');
+            console.log('Available elements:', {
+                mnemonicLabels: mnemonicLabels.length,
+                subsections: document.querySelectorAll('.subsection').length,
+                kanjiResult: !!document.querySelector('.result.kanji')
+            });
+            return;
+        }
+
         const container = document.createElement('div');
         container.id = 'uchisen-mnemonic-container';
         container.style.cssText = `
@@ -115,34 +135,36 @@
             padding: 0;
             text-align: center;
         `;
-        
-        // Add the image
-        const img = document.createElement('img');
-        img.alt = `Uchisen mnemonic for ${kanji}`;
-        img.style.cssText = `
-            max-width: 300px;
-            max-height: 300px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            border: 1px solid var(--table-border-color);
-        `;
 
-        // Fetch image as a blob to bypass potential CSP issues
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: imageUrl,
-            responseType: 'blob',
-            onload: function(response) {
-                const blobUrl = URL.createObjectURL(response.response);
-                img.src = blobUrl;
-            },
-            onerror: function(error) {
-                console.error('Error fetching Uchisen image:', error);
-                img.alt = `Failed to load image for ${kanji}`;
-            }
-        });
-        
-        // Add the story
+        if (imageUrl) {
+            const img = document.createElement('img');
+            img.alt = `Uchisen mnemonic for ${kanji}`;
+            img.style.cssText = `
+                max-width: 300px;
+                max-height: 300px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                border: 1px solid var(--table-border-color);
+            `;
+
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: imageUrl,
+                responseType: 'blob',
+                onload: function(response) {
+                    const blobUrl = URL.createObjectURL(response.response);
+                    img.src = blobUrl;
+                },
+                onerror: function(error) {
+                    console.error('Error fetching Uchisen image:', error);
+                    img.alt = `Failed to load image for ${kanji}`;
+                    img.style.display = 'none'; 
+                }
+            });
+            
+            container.appendChild(img);
+        }
+
         const storyDiv = document.createElement('div');
         storyDiv.textContent = story;
         storyDiv.style.cssText = `
@@ -152,8 +174,7 @@
             max-width: 400px;
             margin: 0 auto 10px auto;
         `;
-        
-        // Add link to Uchisen
+
         const link = document.createElement('a');
         link.href = `https://uchisen.com/kanji/${encodeURIComponent(kanji)}`;
         link.target = '_blank';
@@ -164,19 +185,12 @@
             text-decoration: none;
             font-size: 12px;
         `;
-        
-        container.appendChild(img);
+
         container.appendChild(storyDiv);
         container.appendChild(link);
-        
-        // Insert the container
-        if (mnemonicDiv.tagName === 'DIV' && mnemonicDiv.classList.contains('subsection')) {
-            // Insert after the subsection
-            mnemonicDiv.parentNode.insertBefore(container, mnemonicDiv.nextSibling);
-        } else {
-            // Insert as child
-            mnemonicDiv.appendChild(container);
-        }
+
+        insertionPoint.parentNode.insertBefore(container, insertionPoint.nextSibling);
+        console.log(`Successfully inserted Uchisen mnemonic for ${kanji}`);
     }
 
     function init() {
@@ -188,14 +202,12 @@
         }
     }
 
-    // Run on page load
     init();
     
-    // Observer for URL changes (for review pages)
     const observer = new MutationObserver(() => {
         if (window.location.href !== observer.lastUrl) {
             observer.lastUrl = window.location.href;
-            setTimeout(init, 500); // Small delay to let content load
+            setTimeout(init, 1000); 
         }
     });
     

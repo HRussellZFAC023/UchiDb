@@ -17,13 +17,6 @@ If not detected, open tampermonkey, go to utilites and then import from url
 - 📖 Accompanying story text  
 - 🌙 Light/dark theme support
 - 🔄 Works in reviews and kanji pages
+- ✅ Works on paid if you are a pro user
 
 ![alt text](image.png)
-
-TODO:
-
-Some pages not inserting (fix tomorrow)
-
-Maybe I can get api token and pay up:
-
-<img width="1460" height="1056" alt="image" src="https://github.com/user-attachments/assets/0f01fd3b-797f-4763-85df-2abbc4c59a12" />
