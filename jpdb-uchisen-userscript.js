@@ -202,12 +202,23 @@
         }
     }
 
+    // Run on page load
     init();
     
+    // Observer for both URL changes and content changes
     const observer = new MutationObserver(() => {
-        if (window.location.href !== observer.lastUrl) {
-            observer.lastUrl = window.location.href;
-            setTimeout(init, 1000); 
+        const currentUrl = window.location.href;
+        const urlChanged = currentUrl !== observer.lastUrl;
+        
+        if (urlChanged) {
+            observer.lastUrl = currentUrl;
+            setTimeout(init, 1000);
+        } else {
+            // Check if content changed (for "show answer" clicks)
+            const kanji = extractKanjiFromURL();
+            if (kanji && kanji !== currentKanji) {
+                setTimeout(init, 500);
+            }
         }
     });
     
